@@ -57,6 +57,9 @@ const createProductItemElement = ({ id, title, thumbnail }) => {
 const getIdFromProductItem = (product) =>
   product.querySelector('span.id').innerText;
 
+const cartItemClickListener = (event) => 
+  event.target.parentElement.removeChild(event.target);
+
 /**
  * Função responsável por criar e retornar um item do carrinho.
  * @param {Object} product - Objeto do produto.
@@ -74,9 +77,22 @@ const createCartItemElement = ({ id, title, price }) => {
 };
 
 window.onload = async () => {
-  const items = await fetchProducts('computador');
-  items.results.forEach((element) =>
+  (await fetchProducts('computador')).results.forEach((element) =>
     document
       .querySelector('.items')
       .appendChild(createProductItemElement(element)));
+
+  document.querySelectorAll('.item').forEach((element) => {
+    element.addEventListener('click', async (event) => {
+      document
+        .querySelector('.cart__items')
+        .appendChild(createCartItemElement(
+          await (fetchItem(event.target.parentElement.children[0].innerText)),
+      ));
+    });
+  });
+
+  document.querySelector('.empty-cart').addEventListener('click', () => {
+    document.querySelector('.cart__items').innerText = '';
+  });
 };
