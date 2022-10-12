@@ -3,6 +3,8 @@
 
 // Fique a vontade para modificar o código já escrito e criar suas próprias funções!
 
+const totalPrice = '.total-price';
+
 /**
  * Função responsável por criar e retornar o elemento de imagem do produto.
  * @param {string} imageSource - URL da imagem.
@@ -57,8 +59,12 @@ const createProductItemElement = ({ id, title, thumbnail }) => {
 const getIdFromProductItem = (product) =>
   product.querySelector('span.id').innerText;
 
-const cartItemClickListener = (event) => 
+const cartItemClickListener = (event) => {
   event.target.parentElement.removeChild(event.target);
+  document.querySelector(totalPrice)
+    .innerText = Math.round(((parseFloat(document.querySelector(totalPrice)
+      .innerText)) - (parseFloat(event.target.innerText.split(':')[3].slice(2)))) * 100) / 100;
+};
 
 /**
  * Função responsável por criar e retornar um item do carrinho.
@@ -95,10 +101,17 @@ const addList = async (event) => {
   ));
   const obj = await fetchItem(event.target.parentElement.querySelector('.item_id').innerText);
   arrPrice.push(obj.price);
+  document.querySelector(totalPrice).innerText = `${Math.round(arrPrice
+    .reduce((acc, curr) => acc + curr) * 100) / 100}`;
+};
+
+const createTextValue = () => {
+  const subtitle = document.createElement('h6');
+  subtitle.innerText = 'Valor Total:';
+  subtitle.className = 'subtitle-price';
+  document.querySelector('.cart').appendChild(subtitle);
   document.querySelector('.cart').appendChild(document.createElement('p'))
     .className = 'total-price';
-  document.querySelector('.total-price').innerText = `Valor total: R$${Math.round(arrPrice
-    .reduce((acc, curr) => acc + curr) * 100) / 100}`;
 };
 
 window.onload = async () => {
@@ -114,7 +127,8 @@ window.onload = async () => {
   pageLoaded();
   document.querySelector('.empty-cart').addEventListener('click', () => {
     document.querySelector('.cart__items').innerText = '';
-    document.querySelector('.cart p').remove();
+    document.querySelector(totalPrice).innerText = '0';
     arrPrice = [];
   });
+  createTextValue();
 };
