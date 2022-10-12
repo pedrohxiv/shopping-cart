@@ -88,24 +88,33 @@ const pageLoading = () => {
 const pageLoaded = () => 
   document.querySelector('.items').removeChild(document.querySelector('.loading'));
 
+let arrPrice = [];
+const addList = async (event) => {
+  document.querySelector('.cart__items').appendChild(createCartItemElement(
+    await (fetchItem(event.target.parentElement.children[0].innerText)),
+  ));
+  const obj = await fetchItem(event.target.parentElement.querySelector('.item_id').innerText);
+  arrPrice.push(obj.price);
+  document.querySelector('.cart').appendChild(document.createElement('p'))
+    .className = 'total-price';
+  document.querySelector('.total-price').innerText = `Valor total: R$${Math.round(arrPrice
+    .reduce((acc, curr) => acc + curr) * 100) / 100}`;
+};
+
 window.onload = async () => {
   pageLoading();
   (await fetchProducts('computador')).results.forEach((element) =>
-    document
-      .querySelector('.items')
+    document.querySelector('.items')
       .appendChild(createProductItemElement(element)));
-
-  document.querySelectorAll('.item').forEach((element) => {
-    element.addEventListener('click', async (event) => {
-      document
-        .querySelector('.cart__items')
-        .appendChild(createCartItemElement(
-          await (fetchItem(event.target.parentElement.children[0].innerText)),
-      ));
+    document.querySelectorAll('.item').forEach((element) => {
+      element.addEventListener('click', async (event) => {
+        addList(event);
     });
   });
   pageLoaded();
   document.querySelector('.empty-cart').addEventListener('click', () => {
     document.querySelector('.cart__items').innerText = '';
+    document.querySelector('.cart p').remove();
+    arrPrice = [];
   });
 };
