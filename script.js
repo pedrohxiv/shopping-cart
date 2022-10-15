@@ -4,6 +4,7 @@
 // Fique a vontade para modificar o código já escrito e criar suas próprias funções!
 
 const totalPrice = '.total-price';
+const cartItems = '.cart__items';
 
 /**
  * Função responsável por criar e retornar o elemento de imagem do produto.
@@ -46,7 +47,9 @@ const createProductItemElement = ({ id, title, thumbnail }) => {
   section.appendChild(createCustomElement('span', 'item_id', id));
   section.appendChild(createCustomElement('span', 'item__title', title));
   section.appendChild(createProductImageElement(thumbnail));
-  section.appendChild(createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'));
+  section.appendChild(
+    createCustomElement('button', 'item__add', 'Adicionar ao carrinho!'),
+  );
 
   return section;
 };
@@ -61,9 +64,11 @@ const getIdFromProductItem = (product) =>
 
 const cartItemClickListener = (event) => {
   event.target.parentElement.removeChild(event.target);
-  document.querySelector(totalPrice)
-    .innerText = Math.round(((parseFloat(document.querySelector(totalPrice)
-      .innerText)) - (parseFloat(event.target.innerText.split(':')[3].slice(2)))) * 100) / 100;
+  saveCartItems(document.querySelector(cartItems).innerHTML);
+  document.querySelector(totalPrice).innerText = Math.round(
+      (parseFloat(document.querySelector(totalPrice)
+        .innerText) - parseFloat(event.target.innerText.split(':')[3].slice(2))) * 100,
+    ) / 100;
 };
 
 /**
@@ -91,44 +96,67 @@ const pageLoading = () => {
   document.querySelector('.items').appendChild(text);
 };
 
-const pageLoaded = () => 
-  document.querySelector('.items').removeChild(document.querySelector('.loading'));
+const pageLoaded = () =>
+  document
+    .querySelector('.items')
+    .removeChild(document.querySelector('.loading'));
 
 let arrPrice = [];
 const addList = async (event) => {
-  document.querySelector('.cart__items').appendChild(createCartItemElement(
-    await (fetchItem(event.target.parentElement.children[0].innerText)),
-  ));
-  const obj = await fetchItem(event.target.parentElement.querySelector('.item_id').innerText);
+  document
+    .querySelector(cartItems)
+    .appendChild(
+      createCartItemElement(
+        await fetchItem(event.target.parentElement.children[0].innerText),
+      ),
+    );
+  saveCartItems(document.querySelector(cartItems).innerHTML);
+  const obj = await fetchItem(
+    event.target.parentElement.querySelector('.item_id').innerText,
+  );
   arrPrice.push(obj.price);
-  document.querySelector(totalPrice).innerText = `${Math.round(arrPrice
-    .reduce((acc, curr) => acc + curr) * 100) / 100}`;
+  document.querySelector(totalPrice).innerText = Math.round(arrPrice
+    .reduce((acc, curr) => acc + curr) * 100) / 100;
 };
 
 const createTextValue = () => {
   const subtitle = document.createElement('h6');
   subtitle.innerText = 'Valor Total:';
   subtitle.className = 'subtitle-price';
+  const value = document.createElement('p');
+  value.className = 'total-price';
   document.querySelector('.cart').appendChild(subtitle);
-  document.querySelector('.cart').appendChild(document.createElement('p'))
-    .className = 'total-price';
+  document.querySelector('.cart').appendChild(value);
+};
+
+const getLocalStorage = () => {
+  document.querySelector(cartItems).innerHTML = getSavedCartItems('cartItems');
+  document.querySelectorAll('.cart__item').forEach((element) =>
+    element.addEventListener('click', cartItemClickListener));
+};
+
+const emptyCart = () => {
+  document.querySelector('.empty-cart').addEventListener('click', () => {
+    document.querySelector(cartItems).innerText = '';
+    document.querySelector(totalPrice).innerText = '0';
+    arrPrice = [];
+    saveCartItems(document.querySelector(cartItems).innerHTML);
+  });
 };
 
 window.onload = async () => {
   pageLoading();
   (await fetchProducts('computador')).results.forEach((element) =>
-    document.querySelector('.items')
+    document
+      .querySelector('.items')
       .appendChild(createProductItemElement(element)));
-    document.querySelectorAll('.item').forEach((element) => {
-      element.addEventListener('click', async (event) => {
-        addList(event);
+  document.querySelectorAll('.item').forEach((element) => {
+    element.addEventListener('click', async (event) => {
+      addList(event);
     });
   });
   pageLoaded();
-  document.querySelector('.empty-cart').addEventListener('click', () => {
-    document.querySelector('.cart__items').innerText = '';
-    document.querySelector(totalPrice).innerText = '0';
-    arrPrice = [];
-  });
+  emptyCart();
   createTextValue();
+  getLocalStorage();
 };
